@@ -133,7 +133,7 @@ Backpropagation is the default algorithm for training deep neural networks due t
 
 [Preprint here](https://arxiv.org/abs/2108.13446), feedback welcome! 
 
-Contact: albert@aip.ai
+Contact: albertjimenez.work@gmail.com
 
 If you use our code in your research, you can cite our paper:
 
