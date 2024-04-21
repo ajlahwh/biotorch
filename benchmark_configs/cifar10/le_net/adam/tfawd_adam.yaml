@@ -1,6 +1,6 @@
 # Experiment Information
 experiment:
-  name: "backpropagation_ori"
+  name: "tfawd_adam"
   output_dir: "trained_models/cifar10/le_net_cifar/"
   # For reproducibility
   seed: 2021
@@ -17,11 +17,12 @@ data:
 model:
   architecture: "le_net_cifar"
   mode:
-    type: "backpropagation"
+    type: "tfa"
     options:
       constrain_weights: false
       init: "xavier"
       gradient_clip: false
+      expand_ratio: 10
 
   pretrained: false
   # checkpoint:
@@ -35,15 +36,21 @@ training:
     batch_size: 128
 
   optimizer:
-    type: "SGD"
-    lr: 0.1
-    weight_decay: 0.0001
+    type: "Adam"
+    lr: 0.001
+    weight_decay: 10
     momentum: 0.9
+    betas: [0.9, 0.999]
 
   lr_scheduler:
     type: "multistep_lr"
     gamma: 0.1
     milestones: [100, 150, 200]
+    
+  wd_scheduler:
+    type: "multistep_wd"
+    gamma: 0.1
+    milestones: [1, 5, 10, 20, 50]
 
   metrics:
     top_k: 5

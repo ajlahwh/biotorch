@@ -1,6 +1,6 @@
 # Experiment Information
 experiment:
-  name: "backpropagation_ori"
+  name: "backpropagation"
   output_dir: "trained_models/cifar10/le_net_cifar/"
   # For reproducibility
   seed: 2021
@@ -36,8 +36,8 @@ training:
 
   optimizer:
     type: "SGD"
-    lr: 0.1
-    weight_decay: 0.0001
+    lr: 0.001
+    weight_decay: 0.01
     momentum: 0.9
 
   lr_scheduler:

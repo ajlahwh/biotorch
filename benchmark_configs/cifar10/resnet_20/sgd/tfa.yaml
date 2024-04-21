@@ -1,7 +1,7 @@
 # Experiment Information
 experiment:
-  name: "backpropagation_ori"
-  output_dir: "trained_models/cifar10/le_net_cifar/"
+  name: "tfa"
+  output_dir: "trained_models/cifar10/resnet20/"
   # For reproducibility
   seed: 2021
   deterministic: true
@@ -15,9 +15,9 @@ data:
 
 # Model
 model:
-  architecture: "le_net_cifar"
+  architecture: "resnet20"
   mode:
-    type: "backpropagation"
+    type: "tfa"
     options:
       constrain_weights: false
       init: "xavier"
@@ -37,7 +37,7 @@ training:
   optimizer:
     type: "SGD"
     lr: 0.1
-    weight_decay: 0.0001
+    weight_decay: 0.01
     momentum: 0.9
 
   lr_scheduler:
@@ -50,7 +50,6 @@ training:
     display_iterations: 500
     layer_alignment: true
     weight_ratio: true
-
 
 # Infrastructure
 infrastructure:

@@ -1,27 +1,29 @@
 # Experiment Information
 experiment:
-  name: "backpropagation_ori"
-  output_dir: "trained_models/cifar10/le_net_cifar/"
+  name: "backpropagation"
+  output_dir: "trained_models/mnist/ffn2/"
   # For reproducibility
   seed: 2021
   deterministic: true
 
 # Dataset
 data:
-  dataset: "cifar10_benchmark"
+  dataset: "mnist"
   dataset_path: null
-  target_size: 32
+  target_size: 28
   num_workers: 0
 
 # Model
 model:
-  architecture: "le_net_cifar"
+  architecture: "ffnnet"
   mode:
     type: "backpropagation"
     options:
       constrain_weights: false
       init: "xavier"
       gradient_clip: false
+      hidden_dimensions: [256,256]
+      nonlinearity: "relu"
 
   pretrained: false
   # checkpoint:
@@ -31,8 +33,8 @@ model:
 # Training Parameters
 training:
   hyperparameters:
-    epochs: 250
-    batch_size: 128
+    epochs: 40
+    batch_size: 64
 
   optimizer:
     type: "SGD"
@@ -42,15 +44,14 @@ training:
 
   lr_scheduler:
     type: "multistep_lr"
-    gamma: 0.1
-    milestones: [100, 150, 200]
+    gamma: 0.5
+    milestones: [20, 30]
 
   metrics:
     top_k: 5
     display_iterations: 500
     layer_alignment: true
     weight_ratio: true
-
 
 # Infrastructure
 infrastructure:
