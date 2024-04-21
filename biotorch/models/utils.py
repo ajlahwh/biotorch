@@ -2,6 +2,15 @@ import torch.nn as nn
 
 from biotorch.module.biomodule import BioModule
 
+def create_ffn_biomodel(model_architecture,
+                        mode,
+                        layer_config: dict = None,
+                        pretrained: bool = False,
+                        progress: bool = True,
+                        num_classes: int = 10) -> BioModule:
+    model = model_architecture(network_config=layer_config['options'])
+
+    return BioModule(model, mode=mode, copy_weights=False, layer_config=layer_config, output_dim=num_classes)
 
 def create_torchvision_biomodel(model_architecture,
                                 mode,
