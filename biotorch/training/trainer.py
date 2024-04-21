@@ -5,7 +5,7 @@ import torch
 
 from torch.utils.tensorboard import SummaryWriter
 from biotorch.training.functions import train, test
-from biotorch.training.metrics import compute_angles_module, compute_weight_ratio_module
+from biotorch.training.metrics import compute_angles_module, compute_weight_ratio_module, compute_weight_norm_module
 
 
 class Trainer:
@@ -15,6 +15,7 @@ class Trainer:
                  loss_function,
                  optimizer,
                  lr_scheduler,
+                 wd_scheduler,
                  train_dataloader,
                  val_dataloader,
                  device,
@@ -31,6 +32,7 @@ class Trainer:
         self.loss_function = loss_function
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
+        self.wd_scheduler = wd_scheduler
         self.train_dataloader = train_dataloader
         self.val_dataloader = val_dataloader
         self.device = device
@@ -39,9 +41,10 @@ class Trainer:
         self.display_iterations = metrics_config['display_iterations']
         self.record_layer_alignment = metrics_config['layer_alignment']
         self.record_weight_ratio = metrics_config['weight_ratio']
+        self.record_weight_norm = True
         self.top_k = metrics_config['top_k']
         self.writer = SummaryWriter(self.logs_dir)
-        self.layer_alignment_modes = ['fa', 'usf', 'frsf', 'brsf']
+        self.layer_alignment_modes = ['fa', 'usf', 'frsf', 'brsf','tfa']
 
     def write_layer_alignment(self, epoch):
         if self.record_layer_alignment:
@@ -50,18 +53,29 @@ class Trainer:
                 try:
                     layers_alignment = compute_angles_module(self.model)
                     self.writer.add_scalars('layer_alignment/train', layers_alignment, epoch)
-                except BaseException:
-                    pass
+                except BaseException as e:
+                    print('Layer alignment could not be computed for {}'.format(self.mode))
+                    raise e
             else:
                 print('Layer alignment is not implemented for  {}'.format(self.mode))
 
     def write_weight_ratio(self, epoch):
         if self.record_weight_ratio:
             try:
-                weight_difference = compute_weight_ratio_module(self.model, self.mode)
-                self.writer.add_scalars('weight_difference/train', weight_difference, epoch)
-            except BaseException:
-                pass
+                weight_ratio = compute_weight_ratio_module(self.model, self.mode)
+                self.writer.add_scalars('weight_radio/train', weight_ratio, epoch)
+            except BaseException as e:
+                print('Weight ratio could not be computed for {}'.format(self.mode))
+                raise e
+
+    def write_weight_norm(self, epoch):
+        if self.record_weight_norm:
+            try:
+                weight_norm = compute_weight_norm_module(self.model, self.mode)
+                self.writer.add_scalars('weight_norm/train', weight_norm, epoch)
+            except BaseException as e:
+                print('Weight norm could not be computed for {}'.format(self.mode))
+                raise e
 
     def run(self):
         self.best_acc = 0.0
@@ -69,6 +83,7 @@ class Trainer:
         for epoch in range(self.epochs):
             self.write_layer_alignment(epoch)
             self.write_weight_ratio(epoch)
+            self.write_weight_norm(epoch)
 
             t = time.time()
             acc, loss = train(
@@ -111,6 +126,7 @@ class Trainer:
 
             # Update scheduler after training epoch
             self.lr_scheduler.step()
+            self.wd_scheduler.step()
             self.writer.add_scalar('time/train', total_time, epoch)
 
         with open(os.path.join(self.output_dir, 'best_acc.txt'), 'w') as f:
@@ -118,3 +134,5 @@ class Trainer:
 
         self.write_layer_alignment(epoch)
         self.write_weight_ratio(epoch)
+        self.write_weight_norm(epoch)
+

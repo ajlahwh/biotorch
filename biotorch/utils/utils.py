@@ -3,6 +3,7 @@ import yaml
 
 
 def read_yaml(yaml_path):
+    print(f'Reading YAML file from {yaml_path} at {os.getcwd()}')
     with open(yaml_path, 'r') as f:
         yaml_file = yaml.load(f, Loader=yaml.Loader)
     return yaml_file

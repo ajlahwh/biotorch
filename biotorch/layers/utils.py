@@ -1,6 +1,7 @@
 import torch.nn as nn
 
 import biotorch.layers.fa_constructor as fa_constructor
+import biotorch.layers.tfa_constructor as tfa_constructor
 import biotorch.layers.backpropagation as bp_layers
 import biotorch.layers.dfa as dfa_layers
 
@@ -24,6 +25,19 @@ def convert_layer(layer, mode, copy_weights, layer_config=None, output_dim=None)
     if isinstance(layer, nn.Conv2d):
         if mode in ["fa", "usf", "brsf", "frsf"]:
             new_layer = fa_constructor.Conv2d(
+                layer.in_channels,
+                layer.out_channels,
+                layer.kernel_size,
+                layer.stride,
+                layer.padding,
+                layer.dilation,
+                layer.groups,
+                layer_bias,
+                layer.padding_mode,
+                layer_config
+            )
+        elif mode == 'tfa':
+            new_layer = tfa_constructor.Conv2d(
                 layer.in_channels,
                 layer.out_channels,
                 layer.kernel_size,
@@ -66,6 +80,13 @@ def convert_layer(layer, mode, copy_weights, layer_config=None, output_dim=None)
     elif isinstance(layer, nn.Linear):
         if mode in ["fa", "usf", "brsf", "frsf"]:
             new_layer = fa_constructor.Linear(
+                layer.in_features,
+                layer.out_features,
+                layer_bias,
+                layer_config
+            )
+        elif mode == 'tfa':
+            new_layer = tfa_constructor.Linear(
                 layer.in_features,
                 layer.out_features,
                 layer_bias,

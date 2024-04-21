@@ -19,6 +19,7 @@ from biotorch.utils.validator import validate_config
 from biotorch.datasets.selector import DatasetSelector
 from biotorch.benchmark.optimizers import create_optimizer
 from biotorch.benchmark.lr_schedulers import create_lr_scheduler
+from biotorch.benchmark.wd_schedulers import create_wd_scheduler
 from biotorch.benchmark.losses import select_loss_function
 
 
@@ -53,6 +54,7 @@ class Benchmark:
             self.metrics_config = self.config_file['training']['metrics']
             self.optimizer_config = self.config_file['training']['optimizer']
             self.lr_scheduler_config = self.config_file['training']['lr_scheduler']
+            self.wd_scheduler_config = self.config_file['training']['wd_scheduler'] if 'wd_scheduler' in self.config_file['training'] else None
             self.mode_names = sorted(name for name in models.__dict__ if name.islower() and not name.startswith("__")
                                      and isinstance(models.__dict__[name], ModuleType))
 
@@ -65,7 +67,7 @@ class Benchmark:
                 self.layer_config["options"] = self.mode_options
 
             if self.mode not in self.mode_names:
-                raise ValueError("Mode not {} supported".format(self.mode))
+                raise ValueError("Mode {} not supported in {}".format(self.mode, self.mode_names))
 
             options = models.__dict__[self.mode].__dict__
             self.model_names = sorted(name for name in options if name.islower() and not name.startswith("__")
@@ -139,6 +141,7 @@ class Benchmark:
         self.loss_function = select_loss_function(self.loss_function_config)
         self.optimizer = create_optimizer(self.optimizer_config, self.model)
         self.lr_scheduler = create_lr_scheduler(self.lr_scheduler_config, self.optimizer)
+        self.wd_scheduler = create_wd_scheduler(self.wd_scheduler_config, self.optimizer)
 
         print('\nBenchmarking model on {}'.format(str(self.dataset)))
         print(self.metrics_config)
@@ -148,6 +151,7 @@ class Benchmark:
                           loss_function=self.loss_function,
                           optimizer=self.optimizer,
                           lr_scheduler=self.lr_scheduler,
+                          wd_scheduler=self.wd_scheduler,
                           train_dataloader=self.train_dataloader,
                           val_dataloader=self.val_dataloader,
                           device=self.device,
@@ -228,6 +232,7 @@ class Benchmark:
 
 
 def __main__():
+    os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
     parser = argparse.ArgumentParser(
         description='BioTorch'
     )

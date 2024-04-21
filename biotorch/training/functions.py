@@ -33,6 +33,9 @@ def train(model,
         data_time.update(time.time() - end)
         # Send inputs to device
         inputs, targets = inputs.to(device), targets.to(device)
+        # change target to long if is int
+        if targets.dtype == torch.int64 or targets.dtype == torch.int32:
+            targets = targets.long()
         # Get outputs from the model
         if mode == 'dfa':
             outputs = model(inputs, targets, loss_function)
@@ -41,6 +44,7 @@ def train(model,
 
         # Calculate loss
         outputs = torch.squeeze(outputs)
+
         loss = loss_function(outputs, targets)
 
         # Measure accuracy and record loss
@@ -93,6 +97,9 @@ def test(model,
         end = time.time()
         for idx_batch, (data, target) in enumerate(test_dataloader):
             inputs, targets = data.to(device), target.to(device)
+            # change target to long if is int
+            if targets.dtype == torch.int64 or targets.dtype == torch.int32:
+                targets = targets.long()
             outputs = model(inputs)
             outputs = torch.squeeze(outputs)
             # Measure elapsed time
