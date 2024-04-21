@@ -15,7 +15,7 @@ def create_optimizer(optimizer_config, model):
 
     elif optimizer_config['type'] == 'Adam':
         betas = optimizer_config['betas']
-        optimizer = torch.optim.Adam(model.parameters(),
+        optimizer = torch.optim.AdamW(model.parameters(),
                                      lr=lr,
                                      betas=betas,
                                      weight_decay=weight_decay)
