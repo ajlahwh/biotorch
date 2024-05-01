@@ -2,36 +2,21 @@ import os
 import matplotlib.pyplot as plt
 from tbparse import SummaryReader
 from pathlib import Path
-# ann = 'le_net_cifar'
-ann = 'resnet20'
-parent_path = Path(r'D:\OneDrive\Documents\git_repo\biotorch\trained_models\cifar10') / ann
+from utils import *
 
-def set_mpl():
-    import matplotlib as mpl
-    mpl.rcParams['font.size'] = 8
-    mpl.rcParams['pdf.fonttype'] = 42
-    mpl.rcParams['ps.fonttype'] = 42
-    mpl.rcParams['font.family'] = 'arial'
-    mpl.rcParams['savefig.dpi'] = 480
+parent_path = Path(r'D:\OneDrive\Documents\git_repo\biotorch\trained_models')
 
-def plot_start(square=True,figsize=None,ticks_pos=True):
-    '''
-    unified plot params
-    '''
-    set_mpl()
-    if figsize is not None:
-        fig = plt.figure(figsize=figsize)
-    elif square:
-        fig = plt.figure(figsize=(1.5, 1.5))
-    else:
-        fig = plt.figure(figsize=(1.5, 0.8))
-    ax = fig.add_axes((0.1,0.1,0.8,0.8))
-    if ticks_pos:
-        ax.spines["right"].set_visible(False)
-        ax.spines["top"].set_visible(False)
-        ax.xaxis.set_ticks_position('bottom')
-        ax.yaxis.set_ticks_position('left')
-    return fig,ax
+## cifar10
+# # ann = 'le_net_cifar'
+# # layer_list = ['conv1_0', 'conv2_0', 'conv3_0','fc1_0', 'fc2_0']
+# ann = 'resnet20'
+# layer_list = [f'conv{s // 10}_{s % 10}' for s in range(10, 29)] + ['fc_0']
+# parent_path = parent_path/ 'cifar10' / ann
+
+## mnist
+ann = 'ffn2'
+layer_list = ['fc1', 'fc2', 'fc']
+parent_path = parent_path/ 'mnist' / ann
 
 def path2df(folder_path):
     # search for tf event files in folder
@@ -41,17 +26,16 @@ def path2df(folder_path):
         reader = SummaryReader(path)
         df = reader.scalars
         return df
+    return None
 dfs = {}
 
-if ann == 'le_net_cifar':
-    layer_list = ['conv1_0', 'conv2_0', 'conv3_0','fc1_0', 'fc2_0']
-elif ann == 'resnet20':
-    layer_list = [f'conv{s // 10}_{s % 10}' for s in range(10, 29)] + ['fc_0']
-else:
-    raise NotImplementedError
+color_map = {'backpropagation': 'C0', 'fa': 'C1', 'dfa': 'C2', 'tfawd': 'C3', 'usf': 'C4', 'kpwd': 'C5'}
+
 for alg in ['backpropagation', 'fa', 'dfa', 'tfawd','usf','kpwd']:
-    dfs[alg] = {}
     acc = path2df(parent_path / alg / 'logs')
+    if acc is None:
+        continue
+    dfs[alg] = {}
     dfs[alg]['acc'] = acc[acc['tag'] == 'accuracy/test']
     if alg in ['fa', 'tfawd']:
         for metric_name in ['layer_alignment', 'weight_radio']:
@@ -62,7 +46,9 @@ for alg in ['backpropagation', 'fa', 'dfa', 'tfawd','usf','kpwd']:
 
 fig, ax = plot_start(square=False)
 for alg, alg_label in zip(['backpropagation', 'fa', 'dfa', 'tfawd','usf','kpwd'], ['BP', 'FA', 'DFA', 'PFA','SF','KP']):
-    plt.plot(dfs[alg]['acc']['step'], dfs[alg]['acc']['value'], label=alg_label)
+    if alg not in dfs:
+        continue
+    plt.plot(dfs[alg]['acc']['step'], dfs[alg]['acc']['value'], label=alg_label, color=color_map[alg])
 plt.xticks([0, 100, 200])
 plt.yticks([0, 20, 40, 60, 80, 100])
 plt.xlim(0, 200)
@@ -75,6 +61,8 @@ plt.savefig(Path('./figures') /ann / 'test_acc.pdf', bbox_inches='tight')
 plt.show()
 
 for alg in ['fa', 'tfawd']:
+    if alg not in dfs:
+        continue
     for metric_name in ['layer_alignment', 'weight_radio']:
         fig, ax = plot_start(square=False)
         for layer_idx, layer in enumerate(layer_list):
