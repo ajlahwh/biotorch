@@ -1,13 +1,14 @@
 import torch
 
 from torch import autograd
-
+from torch.cuda.amp import custom_fwd, custom_bwd
 
 class Conv2dGrad(autograd.Function):
     """
     Autograd Function that Does a backward pass using the weight_backward matrix of the layer
     """
     @staticmethod
+    @custom_fwd
     def forward(context, input, weight, weight_backward_B, weight_backward_R, bias, bias_backward, stride, padding, dilation, groups):
         context.stride, context.padding, context.dilation, context.groups = stride, padding, dilation, groups
         # obtain the output of the R layer
@@ -29,13 +30,14 @@ class Conv2dGrad(autograd.Function):
         return output
 
     @staticmethod
+    @custom_bwd
     def backward(context, grad_output_B):
         input, mid_input, weight, weight_backward_B, weight_backward_R, bias, bias_backward = context.saved_tensors
         grad_input = grad_weight = grad_weight_backward_B = grad_weight_backward_R = grad_bias = grad_bias_backward = None
 
         # grad output for R
         grad_output_R = torch.nn.grad.conv2d_input(input_size=mid_input.shape,
-                                                    weight=weight_backward_B,
+                                                    weight=weight_backward_B.to(grad_output_B.dtype),
                                                     grad_output=grad_output_B,
                                                     stride=1,
                                                     padding=0,
@@ -45,7 +47,7 @@ class Conv2dGrad(autograd.Function):
         if context.needs_input_grad[0]:
             # Use the FA constant weight matrix to compute the gradient
             grad_input = torch.nn.grad.conv2d_input(input_size=input.shape,
-                                                    weight=weight_backward_R,
+                                                    weight=weight_backward_R.to(grad_output_R.dtype),
                                                     grad_output=grad_output_R,
                                                     stride=context.stride,
                                                     padding=context.padding,
@@ -54,7 +56,7 @@ class Conv2dGrad(autograd.Function):
 
         # Gradient weights
         if context.needs_input_grad[1]:
-            grad_weight = torch.nn.grad.conv2d_weight(input=input,
+            grad_weight = torch.nn.grad.conv2d_weight(input=input.to(grad_output_B.dtype),
                                                       weight_size=weight.shape,
                                                       grad_output=grad_output_B,
                                                       stride=context.stride,
@@ -67,7 +69,7 @@ class Conv2dGrad(autograd.Function):
 
         # Gradient weights for backward R
         if context.needs_input_grad[3]:
-            grad_weight_backward_R = torch.nn.grad.conv2d_weight(input=input,
+            grad_weight_backward_R = torch.nn.grad.conv2d_weight(input=input.to(grad_output_R.dtype),
                                                       weight_size=weight_backward_R.shape,
                                                       grad_output=grad_output_R,
                                                       stride=context.stride,

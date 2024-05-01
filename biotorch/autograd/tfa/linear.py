@@ -1,11 +1,12 @@
 from torch import autograd
-
+from torch.cuda.amp import custom_fwd, custom_bwd
 
 class LinearGrad(autograd.Function):
     """
     Autograd Function that Does a backward pass using the weight_backward matrix of the layer
     """
     @staticmethod
+    @custom_fwd
     # Same as reference linear function, but with additional weight tensor for backward
     def forward(context, input, weight, weight_backward_B, weight_backward_R, bias=None, bias_backward=None):
         context.save_for_backward(input, weight, weight_backward_B, weight_backward_R, bias, bias_backward)
@@ -15,6 +16,7 @@ class LinearGrad(autograd.Function):
         return output
 
     @staticmethod
+    @custom_bwd
     def backward(context, grad_output_B):
         input, weight, weight_backward_B, weight_backward_R, bias, bias_backward = context.saved_tensors
         grad_input = grad_weight = grad_weight_backward_B = grad_weight_backward_R = grad_bias = grad_bias_backward = None

@@ -1,4 +1,4 @@
-import biotorch.models.ffnnet as models
+import biotorch.models.ffn_net as models
 from biotorch.models.utils import create_ffn_biomodel
 
 
