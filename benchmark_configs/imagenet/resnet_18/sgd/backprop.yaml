@@ -9,7 +9,7 @@ experiment:
 # Dataset
 data:
   dataset: "imagenet"
-  dataset_path: "D:\\ImageNet"
+  dataset_path: "C:\\Users\\lijia\\Downloads\\ImageNet"
   target_size: 224
   num_workers: 0
 
@@ -32,7 +32,7 @@ model:
 training:
   hyperparameters:
     epochs: 75
-    batch_size: 256 
+    batch_size: 256
 
   optimizer:
     type: "SGD"

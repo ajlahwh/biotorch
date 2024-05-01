@@ -1,27 +1,29 @@
 # Experiment Information
 experiment:
   name: "dfa"
-  output_dir: "trained_models/cifar10/resnet20/"
+  output_dir: "trained_models/mnist/ffn2/"
   # For reproducibility
   seed: 2021
   deterministic: true
 
 # Dataset
 data:
-  dataset: "cifar10_benchmark"
+  dataset: "mnist"
   dataset_path: null
-  target_size: 32
+  target_size: 28
   num_workers: 0
 
 # Model
 model:
-  architecture: "resnet20"
+  architecture: "ffnnet"
   mode:
     type: "dfa"
     options:
       constrain_weights: false
       init: "xavier"
       gradient_clip: false
+      hidden_dimensions: [256,256]
+      nonlinearity: "relu"
 
   pretrained: false
   # checkpoint:
@@ -31,19 +33,19 @@ model:
 # Training Parameters
 training:
   hyperparameters:
-    epochs: 250
-    batch_size: 128
+    epochs: 40
+    batch_size: 64
 
   optimizer:
     type: "SGD"
-    lr: 0.001
+    lr: 0.01
     weight_decay: 0.0001
     momentum: 0.9
 
   lr_scheduler:
     type: "multistep_lr"
-    gamma: 0.1
-    milestones: [100, 150, 200]
+    gamma: 0.5
+    milestones: [20, 30]
 
   metrics:
     top_k: 5

@@ -1,21 +1,21 @@
 # Experiment Information
 experiment:
   name: "tfawd"
-  output_dir: "trained_models/cifar10/resnet20/"
+  output_dir: "trained_models/imagenet/resnet18/"
   # For reproducibility
   seed: 2021
   deterministic: true
 
 # Dataset
 data:
-  dataset: "cifar10_benchmark"
-  dataset_path: null
-  target_size: 32
+  dataset: "imagenet"
+  dataset_path: "C:\\Users\\lijia\\Downloads\\ImageNet"
+  target_size: 224
   num_workers: 0
 
 # Model
 model:
-  architecture: "resnet20"
+  architecture: "resnet18"
   mode:
     type: "tfa"
     options:
@@ -32,24 +32,24 @@ model:
 # Training Parameters
 training:
   hyperparameters:
-    epochs: 250
-    batch_size: 128
+    epochs: 75
+    batch_size: 256
 
   optimizer:
     type: "SGD"
     lr: 0.1
-    weight_decay: 0.01
+    weight_decay: 0.0005
     momentum: 0.9
 
   lr_scheduler:
     type: "multistep_lr"
     gamma: 0.1
-    milestones: [100, 150, 200]
+    milestones: [20, 40, 60]
     
   wd_scheduler:
     type: "multistep_wd"
-    gamma: 0.1
-    milestones: [0, 10]
+    gamma: 0.2
+    milestones: [0]
 
   metrics:
     top_k: 5
